@@ -1,0 +1,36 @@
+version: '3.7'
+services:
+    ui:
+        build:
+            context: frontend
+            target: base
+        image: sample-react-ui
+        container_name: sample-react-ui
+        volumes:
+            - ./frontend:/app
+            - node_modules:/app/node_modules
+        labels:
+            - "traefik.http.routers.ui.rule=PathPrefix(`/`)"
+            - "traefik.http.services.ui.loadbalancer.server.port=3000"
+        stdin_open: true
+    api:
+        build: 
+            context: backend
+            target: base
+        image: sample-dotnet-api
+        container_name: sample-dotnet-api
+        volumes:
+            - ./backend:/app
+        labels:
+            - "traefik.http.routers.api.rule=PathPrefix(`/api/`)"
+            - "traefik.http.services.api.loadbalancer.server.port=5000"
+    reverse-proxy:
+        image: traefik:2.2
+        command: --providers.docker --api.insecure=true
+        ports:
+            - "8000:80"
+            - "8080:8080"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+volumes:
+    node_modules:
